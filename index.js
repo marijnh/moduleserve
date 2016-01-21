@@ -91,15 +91,20 @@ function resolveModule(path) {
     modPath = localPath
   }
 
-  try {
-    resolved = module_._resolveFilename(modPath, {
-      id: parent,
-      paths: module_._nodeModulePaths(parent).concat(module_.globalPaths)
-    })
-  } catch(e) { return null }
+  var dummyMod = {
+    id: parent,
+    paths: module_._nodeModulePaths(parent).concat(module_.globalPaths)
+  }
+  try { resolved = module_._resolveFilename(modPath, dummyMod) }
+  catch(e) { return null }
 
-  if (resolved.indexOf("/") == -1 && path.charAt(path.length - 1) != "/")
-    return resolveModule(path + "/")
+  // Handle builtin modules resolving to strings like "fs", try again
+  // with slash which makes it possible to locally install an equivalent.
+  if (resolved.indexOf("/") == -1) {
+    try { resolved = module_._resolveFilename(modPath + "/", dummyMod) }
+    catch(e) { return null }
+  }
+
   return pth.relative(here, resolved)
 }
 
