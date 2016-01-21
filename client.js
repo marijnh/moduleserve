@@ -31,7 +31,7 @@
       if (/^\./.test(name)) name = resolve(path, name)
       else name = path + "/__mod/" + name
       if (name in loaded) return loaded[name]
-      var resp = get(base + name.replace(/(^|\/)\.\.(?=$|\/)/g, "$1__"))
+      var resp = get(base + name.replace(/(^|\/)\.\.(?=$|\/)/g, "$1__").replace(/\.js$/, ""))
       name = resp.url.match(/\/moduleserve\/mod(\/.*)/)[1]
       if (name in loaded) return loaded[name]
       if (/\.json$/.test(name))

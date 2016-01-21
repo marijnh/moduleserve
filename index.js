@@ -60,7 +60,10 @@ require("http").createServer(function(req, resp) {
 
   if (found != path) {
     if (!(found in resolved)) resolved[found] = found
-    return send(301, null, {location: "/moduleserve/mod/" + dash(found)})
+    if (found != path + ".js")
+      return send(301, null, {location: "/moduleserve/mod/" + dash(found)})
+  } else if (/\.js$/.test(path)) {
+    return send(301, null, {location: "/moduleserve/mod/" + dash(found.slice(0, found.length - 3))})
   }
 
   var cached = cache[found]
