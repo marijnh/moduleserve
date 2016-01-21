@@ -1,0 +1,20 @@
+{
+  "name": "moduleserve",
+  "version": "0.1.0",
+  "description": "Serve and transpile CommonJS modules over HTTP",
+  "main": "index.js",
+  "bin": {
+    "moduleserve": "./index.js"
+  },
+  "keywords": [
+    "commonjs",
+    "module",
+    "http",
+    "development"
+  ],
+  "author": "Marijn Haverbeke <marijnh@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "ecstatic": "^1.4.0"
+  }
+}
