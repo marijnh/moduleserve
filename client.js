@@ -1,13 +1,12 @@
 (function() {
   "use strict"
 
-  function get(url, parent) {
+  function get(url) {
     var xhr = new XMLHttpRequest()
     xhr.open("get", url, false)
-    xhr.setRequestHeader("x-moduleserve-parent", parent)
     xhr.send()
-    if (xhr.status >= 300) throw new Error(url + ": " + xhr.statusText)
-    return {path: xhr.getResponseHeader("x-moduleserve-path"), content: xhr.responseText}
+    if (xhr.status >= 400) throw new Error(url + ": " + xhr.statusText)
+    return {url: xhr.responseURL, content: xhr.responseText}
   }
 
   var loaded = Object.create(null)
@@ -29,18 +28,22 @@
   function Module(path, base) {
     this.exports = {}
     this.require = function(name) {
-      var modPath = /^\./.test(name) ? "/path" + resolve(path, name) : "/mod/" + name
-      if (modPath in loaded) return loaded[modPath]
-      var resp = get(base + modPath.replace(/(^|\/)\.\.($|\/)/, "$1__$2"), path.slice(1))
+      if (/^\./.test(name)) name = resolve(path, name)
+      else name = path + "/__mod/" + name
+      if (name in loaded) return loaded[name]
+      var resp = get(base + name.replace(/(^|\/)\.\.(?=$|\/)/g, "$1__"))
+      name = resp.url.match(/\/moduleserve\/mod(\/.*)/)[1]
+      if (name in loaded) return loaded[name]
       if (/\.json$/.test(name))
-        return loaded[modPath] = JSON.parse(resp.content)
-      var mod = new Module(resp.path, base)
-      loaded[modPath] = mod.exports
-      ;(new Function("module, require, exports", resp.content + "\n//# sourceURL=" + modPath))(mod, mod.require, mod.exports)
-      return loaded[modPath] = mod.exports
+        return loaded[name] = JSON.parse(resp.content)
+      var mod = new Module(name, base)
+      loaded[name] = mod.exports
+      ;(new Function("module, require, exports", resp.content + "\n//# sourceURL=" + name))(mod, mod.require, mod.exports)
+      return loaded[name] = mod.exports
     }
   }
 
-  var script = document.currentScript || querySelector("script[data-module]")
-  new Module("/index", /^(.*)\/load\.js$/.exec(script.src)[1]).require(script.getAttribute("data-module"))
+  var script = document.currentScript || document.querySelector("script[data-module]")
+  var base = /^(.*)\/load\.js$/.exec(script.src)[1] + "/mod"
+  new Module("/index", base).require(script.getAttribute("data-module"))
 })()

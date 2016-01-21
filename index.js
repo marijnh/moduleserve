@@ -29,12 +29,13 @@ if (transform) {
 var ecstatic = require("ecstatic")({root: here})
 var client_js = fs.readFileSync(__dirname + "/client.js", "utf8")
 
+var resolved = Object.create(null)
+
 require("http").createServer(function(req, resp) {
   var url = url_.parse(req.url)
-  var handle = /^\/moduleserve\/(?:load\.js$|(mod|path)\/(.*))/.exec(url.pathname)
+  var handle = /^\/moduleserve\/(?:load\.js$|mod\/(.*))/.exec(url.pathname)
 
-  if (!handle)
-    return ecstatic(req, resp)
+  if (!handle) return ecstatic(req, resp)
 
   var send = function(status, text, headers) {
     var hds = {"access-control-allow-origin": "*"}
@@ -46,23 +47,60 @@ require("http").createServer(function(req, resp) {
     resp.end(text)
   }
 
-  if (!handle[1]) // /moduleserve/load.js
-    return send(200, client_js, "application/javascript")
-  var cached = (handle[1] == "mod" ? cachedMods : cachedFiles)[handle[2]]
+  // matched /moduleserve/load.js
+  if (!handle[1]) return send(200, client_js, "application/javascript")
+
+  var path = undash(handle[1])
+  var found = resolved[path]
+  if (!found) {
+    found = resolveModule(path)
+    if (!found) return send(404, "Not found")
+    resolved[path] = found
+  }
+
+  if (found != path) {
+    if (!(found in resolved)) resolved[found] = found
+    return send(301, null, {location: "/moduleserve/mod/" + dash(found)})
+  }
+
+  var cached = cache[found]
   if (cacheValid(cached)) {
     var noneMatch = req.headers["if-none-match"]
     if (noneMatch && noneMatch.indexOf(cached.headers.etag) > -1) return send(304, null)
     else return send(200, cached.content, cached.headers)
   }
-  if (handle[1] == "mod")
-    return resolveMod(handle[2], send, req.headers["x-moduleserve-parent"])
-  else if (handle[1] == "path")
-    resolveFile(handle[2], send)
+
+  return sendScript(found, send)
+
 }).listen(port, host)
 
-var cachedMods = Object.create(null)
-var cachedFiles = Object.create(null)
-var nextTag = 0
+function undash(path) { return path.replace(/(^|\/)__(?=$|\/)/g, "$1..") }
+function dash(path) { return path.replace(/(^|\/)\.\.(?=$|\/)/g, "$1__") }
+
+function resolveModule(path) {
+  var localPath = pth.resolve(here, path)
+  var hasMod = localPath.indexOf("/__mod/"), parent, modPath, resolved
+  if (hasMod > -1) {
+    parent = localPath.slice(0, hasMod)
+    modPath = localPath.slice(hasMod + 7)
+  } else {
+    parent = here
+    modPath = localPath
+  }
+
+  try {
+    resolved = module_._resolveFilename(modPath, {
+      id: parent,
+      paths: module_._nodeModulePaths(parent).concat(module_.globalPaths)
+    })
+  } catch(e) { return null }
+
+  if (resolved.indexOf("/") == -1 && path.charAt(path.length - 1) != "/")
+    return resolveModule(path + "/")
+  return pth.relative(here, resolved)
+}
+
+var cache = Object.create(null), nextTag = 0
 
 function Cached(file, content, headers) {
   this.file = file
@@ -79,45 +117,13 @@ function cacheValid(cache) {
   return +stat.mtime == cache.mtime
 }
 
-function dotify(path) {
-  return path.replace(/(^|\/)__($|\/)/, "$1..$2")
-}
-
-function resolveFile(path, send) {
-  var localPath = pth.resolve(here, dotify(path))
-  if (/\.js(on)?$/.test(localPath) && fs.existsSync(localPath))
-    ; // Already proper path
-  else if (fs.existsSync(localPath + ".js"))
-    localPath += ".js"
-  else if (fs.existsSync(localPath + "/index.js"))
-    localPath += "/index.js"
-  else
-    return send(404, "Not found")
-  return sendScript(send, path, localPath, cachedFiles)
-}
-
-function resolveMod(path, send, parent) {
-  var resolved, parentPath = pth.resolve(here, parent)
-  try {
-    resolved = module_._resolveFilename(path, {
-      id: parentPath,
-      paths: module_._nodeModulePaths(parentPath).concat(module_.globalPaths)
-    })
-  } catch(e) { return send(404, "Not found") }
-  // Work around Node returning simply strings for built-in modules
-  if (resolved.charAt(0) != "/" && path.charAt(path.length - 1) != "/")
-    return resolveMod(path + "/", send, parent)
-  return sendScript(send, path, resolved, cachedMods)
-}
-
-function sendScript(send, path, localPath, cache) {
-  var content
+function sendScript(path, send) {
+  var content, localPath = pth.resolve(here, path)
   try { content = fs.readFileSync(localPath, "utf8") }
   catch(e) { return send(404, "Not found") }
   if (transform) content = transform(localPath, content)
   var headers = {
     "content-type": "application/javascript",
-    "x-moduleserve-path": "/" + pth.relative(here, localPath.replace(/\.\w+$/, "")),
     "etag": '"' + (++nextTag) + '"'
   }
   cache[path] = new Cached(localPath, content, headers)
