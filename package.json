@@ -4,7 +4,7 @@
   "description": "Serve and transpile CommonJS modules over HTTP",
   "main": "index.js",
   "bin": {
-    "moduleserve": "./index.js"
+    "moduleserve": "./bin/moduleserve.js"
   },
   "repository": {
     "type": "git",
