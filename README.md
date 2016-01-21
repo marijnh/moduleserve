@@ -11,6 +11,8 @@ the compilation/transformation integrated in the server shim).
    else or proxy in some uncautious way, you are putting yourself at
    risk.
 
+ * This does everything syncronously, both on client and server.
+
  * This is a hack that I am using for my own development, not
    generally-useful, supported software. You might be able to make use
    of it, but if you run into a problem, you should try to debug it
@@ -60,8 +62,8 @@ contain `node_modules/`.
 The client is going to make a request for every single module file, so
 for a bigger project the initial load is bound to be slow, especially
 if you're using an expensive transform. The server then caches these
-and sends 302 responses whenever possible, so subsequent loads should
-be faster.
+and sends 302 responses whenever possible, so assuming localhost-level
+latency, subsequent loads should be faster.
 
 ## Source
 
