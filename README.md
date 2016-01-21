@@ -37,24 +37,31 @@ That will pull in the client-side scaffolding and look for
 running on.
 
 That module is loaded as a
-[CommonJS](http://wiki.commonjs.org/wiki/Modules/1.1), and use
-`require` with the regular node.js conventions (implicit `.js` or
+[CommonJS](http://wiki.commonjs.org/wiki/Modules/1.1) module, and may
+use `require` with the regular node.js conventions (implicit `.js` or
 `/index.js`, searching `node_modules`, etc). The intention is that,
 contrary to systems like JSPM, you don't have to set up your project
 to please this tool, but you can just directly use it on an npm-style
 codebase.
 
 You can pass `moduleserve` a `--transform` option, which should point
-at a module that defines a transformer. Such a transformer is called
-on a file before it is served. It should export a `transform` function
-that takes `(filename, text)` parameter and returns the transformed
-text.
+at a node module that defines a transformer. Such a transformer is
+called on a file before it is served. It should export a `transform`
+function that takes `(filename, text)` parameter and returns the
+transformed text. If it also exports an `init` function, that is
+called once with the target directory of the server.
 
 If you pass `--transform babel`, you get a built-in transformer that
-loads `babel` in the context of the directory (i.e. you have to have
-it installed locally there, or globally) that you're running the tool
-on, and uses it to transform any files whose path does not contain
-`node_modules/`.
+loads `babel` in the context of the target directory (i.e. you have to
+have it installed locally there, or globally) that you're running the
+tool on, and uses it to transform any files whose path does not
+contain `node_modules/`.
+
+The client is going to make a request for every single module file, so
+for a bigger project the initial load is bound to be slow, especially
+if you're using an expensive transform. The server then caches these
+and sends 302 responses whenever possible, so subsequent loads should
+be faster.
 
 ## Source
 
