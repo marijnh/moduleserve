@@ -18,9 +18,8 @@ the compilation/transformation integrated in the server shim).
    of it, but if you run into a problem, you should try to debug it
    yourself, not ask me for help.
 
- * The code is going to break if you do something that I'm not doing,
-   such as include `.js` extensions in your require calls, or trying
-   to require `.json` files, etc. Pull requests welcome!
+ * The code is likely to break if you do something that I'm not doing.
+   Pull requests welcome!
 
 ## What it does
 

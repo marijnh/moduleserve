@@ -18,10 +18,7 @@ for (var i = 2; i < process.argv.length; i++) {
 }
 
 var here = pth.resolve(dir)
-var dummyMod = {
-  id: here,
-  paths: module_._nodeModulePaths(here).concat(module_.globalPaths)
-}
+if (here.charAt(here.length - 1) != "/") here += "/"
 
 if (transform) {
   var transformMod = require(transform == "babel" ? "./babel-transform" : pth.resolve(transform))
@@ -58,7 +55,7 @@ require("http").createServer(function(req, resp) {
     else return send(200, cached.content, cached.headers)
   }
   if (handle[1] == "mod")
-    return resolveMod(handle[2], send)
+    return resolveMod(handle[2], send, req.headers["x-moduleserve-parent"])
   else if (handle[1] == "path")
     resolveFile(handle[2], send)
 }).listen(port, host)
@@ -88,7 +85,9 @@ function dotify(path) {
 
 function resolveFile(path, send) {
   var localPath = pth.resolve(here, dotify(path))
-  if (fs.existsSync(localPath + ".js"))
+  if (/\.js(on)?$/.test(localPath) && fs.existsSync(localPath))
+    ; // Already proper path
+  else if (fs.existsSync(localPath + ".js"))
     localPath += ".js"
   else if (fs.existsSync(localPath + "/index.js"))
     localPath += "/index.js"
@@ -97,15 +96,24 @@ function resolveFile(path, send) {
   return sendScript(send, path, localPath, cachedFiles)
 }
 
-function resolveMod(path, send) {
-  var resolved
-  try { resolved = module_._resolveFilename(path, dummyMod) }
-  catch(e) { return send(404, "Not found") }
+function resolveMod(path, send, parent) {
+  var resolved, parentPath = pth.resolve(here, parent)
+  try {
+    resolved = module_._resolveFilename(path, {
+      id: parentPath,
+      paths: module_._nodeModulePaths(parentPath).concat(module_.globalPaths)
+    })
+  } catch(e) { return send(404, "Not found") }
+  // Work around Node returning simply strings for built-in modules
+  if (resolved.charAt(0) != "/" && path.charAt(path.length - 1) != "/")
+    return resolveMod(path + "/", send, parent)
   return sendScript(send, path, resolved, cachedMods)
 }
 
 function sendScript(send, path, localPath, cache) {
-  var content = fs.readFileSync(localPath, "utf8")
+  var content
+  try { content = fs.readFileSync(localPath, "utf8") }
+  catch(e) { return send(404, "Not found") }
   if (transform) content = transform(localPath, content)
   var headers = {
     "content-type": "application/javascript",
