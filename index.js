@@ -67,7 +67,7 @@ require("http").createServer(function(req, resp) {
   }
 
   var cached = cache[found]
-  if (cacheValid(cached)) {
+  if (cached) {
     var noneMatch = req.headers["if-none-match"]
     if (noneMatch && noneMatch.indexOf(cached.headers.etag) > -1) return send(304, null)
     else return send(200, cached.content, cached.headers)
@@ -114,15 +114,6 @@ function Cached(file, content, headers) {
   this.file = file
   this.content = content
   this.headers = headers
-  this.mtime = +fs.statSync(file).mtime
-}
-
-function cacheValid(cache) {
-  if (!cache) return false
-  var stat
-  try { stat = fs.statSync(cache.file) }
-  catch(e) { return false }
-  return +stat.mtime == cache.mtime
 }
 
 function sendScript(path, send) {
@@ -135,5 +126,9 @@ function sendScript(path, send) {
     "etag": '"' + (++nextTag) + '"'
   }
   cache[path] = new Cached(localPath, content, headers)
+  var watching = fs.watch(localPath, function() {
+    watching.close()
+    cache[path] = null
+  })
   return send(200, content, headers)
 }
