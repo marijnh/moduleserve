@@ -12,5 +12,5 @@ exports.init = function(path) {
 
 exports.transform = function(path, text) {
   if (/node_modules\//.test(path)) return text
-  return babel.transform(text).code
+  return babel.transform(text, {filename: path}).code
 }
