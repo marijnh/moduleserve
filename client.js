@@ -25,14 +25,20 @@
     return base + name
   }
 
+  var resolved = Object.create(null)
+
   function Module(path, base) {
     this.exports = {}
     this.require = function(name) {
       if (/^\./.test(name)) name = resolve(path, name)
       else name = path + "/__mod/" + name
+      if (name in resolved) name = resolved[name]
       if (name in loaded) return loaded[name]
       var resp = get(base + name.replace(/(^|\/)\.\.(?=$|\/)/g, "$1__").replace(/\.js$/, ""))
-      name = resp.url.match(/\/moduleserve\/mod(\/.*)/)[1]
+      var resolvedName = resp.url.match(/\/moduleserve\/mod(\/.*)/)[1].replace(/(^|\/)__(?=$|\/)/g, "$1..")
+      if (resolvedName != name) resolved[name] = resolvedName
+      name = resolvedName
+      window.reqs =( window.reqs || 0) + 1
       if (name in loaded) return loaded[name]
       if (/\.json$/.test(name))
         return loaded[name] = JSON.parse(resp.content)
