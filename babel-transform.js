@@ -12,5 +12,9 @@ exports.init = function(path) {
 
 exports.transform = function(path, text) {
   if (/node_modules\//.test(path)) return text
-  return babel.transform(text, {filename: path}).code
+  try {
+    return babel.transform(text, {filename: path}).code
+  } catch(e) {
+    return "console.error(" + JSON.stringify(e + "") + ")"
+  }
 }
