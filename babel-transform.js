@@ -13,7 +13,7 @@ exports.init = function(path) {
 exports.transform = function(path, text) {
   if (/node_modules\//.test(path)) return text
   try {
-    return babel.transform(text, {filename: path}).code
+    return babel.transform(text, {filename: path, sourceMaps: "inline"}).code
   } catch(e) {
     return "console.error(" + JSON.stringify(e + "") + ")"
   }
