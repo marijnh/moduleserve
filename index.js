@@ -1,6 +1,10 @@
 var module_ = require("module"), pth = require("path"), fs = require("fs")
 var url_ = require("url")
 
+function resolve() { return unwin(pth.resolve.apply(pth, arguments)) }
+function relative() { return unwin(pth.relative.apply(pth, arguments)) }
+function unwin(s) { return s.replace(/\\/g, '/') }
+
 var host = "localhost", port = 8080, dir = ".", transform = null
 
 function usage() {
@@ -17,11 +21,11 @@ for (var i = 2; i < process.argv.length; i++) {
   else usage()
 }
 
-var here = pth.resolve(dir)
+var here = resolve(dir)
 if (here.charAt(here.length - 1) != "/") here += "/"
 
 if (transform) {
-  var transformMod = require(transform == "babel" ? "./babel-transform" : pth.resolve(transform))
+  var transformMod = require(transform == "babel" ? "./babel-transform" : resolve(transform))
   if (transformMod.init) transformMod.init(here)
   transform = transformMod.transform
 }
@@ -81,7 +85,7 @@ function undash(path) { return path.replace(/(^|\/)__(?=$|\/)/g, "$1..") }
 function dash(path) { return path.replace(/(^|\/)\.\.(?=$|\/)/g, "$1__") }
 
 function resolveModule(path) {
-  var localPath = pth.resolve(here, path)
+  var localPath = resolve(here, path)
   var hasMod = localPath.indexOf("/__mod/"), parent, modPath, resolved
   if (hasMod > -1) {
     parent = localPath.slice(0, hasMod)
@@ -95,17 +99,17 @@ function resolveModule(path) {
     id: parent,
     paths: module_._nodeModulePaths(parent).concat(module_.globalPaths)
   }
-  try { resolved = module_._resolveFilename(modPath, dummyMod) }
+  try { resolved = unwin(module_._resolveFilename(modPath, dummyMod)) }
   catch(e) { return null }
 
   // Handle builtin modules resolving to strings like "fs", try again
   // with slash which makes it possible to locally install an equivalent.
   if (resolved.indexOf("/") == -1) {
-    try { resolved = module_._resolveFilename(modPath + "/", dummyMod) }
+    try { resolved = unwin(module_._resolveFilename(modPath + "/", dummyMod)) }
     catch(e) { return null }
   }
 
-  return pth.relative(here, resolved)
+  return relative(here, resolved)
 }
 
 var cache = Object.create(null), nextTag = 0
@@ -117,7 +121,7 @@ function Cached(file, content, headers) {
 }
 
 function sendScript(path, send) {
-  var content, localPath = pth.resolve(here, path)
+  var content, localPath = resolve(here, path)
   try { content = fs.readFileSync(localPath, "utf8") }
   catch(e) { return send(404, "Not found") }
   if (transform) content = transform(localPath, content)
