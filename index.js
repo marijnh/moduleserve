@@ -3,7 +3,7 @@ var url_ = require("url")
 
 function resolve() { return unwin(pth.resolve.apply(pth, arguments)) }
 function relative() { return unwin(pth.relative.apply(pth, arguments)) }
-function unwin(s) { return s.replace(/\\/g, '/') }
+var unwin = pth.sep == "\\" ? function(s) { return s.replace(/\\/g, '/') } : function(s) { return s }
 
 var host = "localhost", port = 8080, dir = ".", transform = null
 
