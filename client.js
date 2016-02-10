@@ -44,9 +44,24 @@
         return loaded[name] = JSON.parse(resp.content)
       var mod = new Module(name, base)
       loaded[name] = mod.exports
-      ;(new Function("module, require, exports", resp.content + "\n//# sourceURL=" + name))(mod, mod.require, mod.exports)
+      evalFunction(resp.content, name)(mod, mod.require, mod.exports)
       return loaded[name] = mod.exports
     }
+  }
+
+  function spaces(n) {
+    var result = ""
+    for (var i = 0; i < n; i++) result += " "
+    return result
+  }
+
+  function evalFunction(content, name) {
+    var prefix = "(function(module, require, exports){", suffix = "\n})"
+    var scratch = /^\/\*\[moduleserve scratch space\.*\]\*\//.exec(content)
+    if (scratch)
+      content = spaces(scratch[0].length - prefix.length) + content.slice(scratch[0].length)
+    if (!/\/\/#/.test(content)) content += "\n//# sourceURL=" + name
+    return (0, eval)(prefix + content + suffix)
   }
 
   var script = document.currentScript || document.querySelector("script[data-module]")
