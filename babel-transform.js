@@ -15,8 +15,7 @@ exports.transform = function(path, text) {
   try {
     return babel.transform(text, {
       filename: path,
-      sourceMaps: "inline",
-      auxiliaryCommentBefore: "[moduleserve scratch space.........................................]"
+      sourceMaps: "inline"
     }).code
   } catch(e) {
     return "console.error(" + JSON.stringify(e + "") + ")"

@@ -49,17 +49,8 @@
     }
   }
 
-  function spaces(n) {
-    var result = ""
-    for (var i = 0; i < n; i++) result += " "
-    return result
-  }
-
   function evalFunction(content, name) {
     var prefix = "(function(module, require, exports){", suffix = "\n})"
-    var scratch = /^\/\*.*?\*\/|^\/\/.*/.exec(content)
-    if (scratch && scratch[0].length >= prefix.length)
-      content = spaces(scratch[0].length - prefix.length) + content.slice(scratch[0].length)
     if (!/\/\/#/.test(content)) content += "\n//# sourceURL=" + name
     return (0, eval)(prefix + content + suffix)
   }
