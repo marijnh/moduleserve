@@ -21,6 +21,7 @@ for (var i = 2; i < process.argv.length; i++) {
   else usage()
 }
 
+// The root directory being served.
 var here = resolve(dir)
 if (here.charAt(here.length - 1) != "/") here += "/"
 
@@ -33,8 +34,11 @@ if (transform) {
 var ecstatic = require("ecstatic")({root: here})
 var client_js = fs.readFileSync(__dirname + "/client.js", "utf8")
 
+// A map of module paths to the module's filesystem path.
 var resolved = Object.create(null)
 
+// Create the server that listens to HTTP requests
+// and returns module contents.
 require("http").createServer(function(req, resp) {
   var url = url_.parse(req.url)
   var handle = /^\/moduleserve\/(?:load\.js$|mod\/(.*))/.exec(url.pathname)
@@ -54,6 +58,8 @@ require("http").createServer(function(req, resp) {
   // matched /moduleserve/load.js
   if (!handle[1]) return send(200, client_js, "application/javascript")
 
+  // Modules paths in URLs represent "up one directory" as "__".
+  // Convert them to ".." for filesystem path resolution.
   var path = undash(handle[1])
   var found = resolved[path]
   if (!found) {
@@ -84,6 +90,8 @@ require("http").createServer(function(req, resp) {
 function undash(path) { return path.replace(/(^|\/)__(?=$|\/)/g, "$1..") }
 function dash(path) { return path.replace(/(^|\/)\.\.(?=$|\/)/g, "$1__") }
 
+// Resolve a module path to a relative filepath where
+// the module's file exists.
 function resolveModule(path) {
   var localPath = resolve(here, path)
   var hasMod = localPath.indexOf("/__mod/"), parent, modPath, resolved
@@ -120,6 +128,8 @@ function Cached(file, content, headers) {
   this.headers = headers
 }
 
+// Send the script and cache the response in memory
+// for future requests for the same module.
 function sendScript(path, send) {
   var content, localPath = resolve(here, path)
   try { content = fs.readFileSync(localPath, "utf8") }
@@ -130,6 +140,7 @@ function sendScript(path, send) {
     "etag": '"' + (++nextTag) + '"'
   }
   cache[path] = new Cached(localPath, content, headers)
+  // Bust the cache when the file changes.
   var watching = fs.watch(localPath, function() {
     watching.close()
     cache[path] = null
