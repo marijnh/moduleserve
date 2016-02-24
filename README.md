@@ -35,7 +35,9 @@ of the `demo` directory statically. In addition, it exposes a URL
 
 That will pull in the client-side scaffolding and look for
 `./mymodule`, resolved relative to the directory that the server is
-running on.
+running on. You can add a `data-require` attribute to the tag to have
+it set a global `require` variable, which you can use to load modules
+from the console.
 
 That module is loaded as a
 [CommonJS](http://wiki.commonjs.org/wiki/Modules/1.1) module, and may

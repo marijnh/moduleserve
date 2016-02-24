@@ -72,5 +72,9 @@
   var base = /^(.*)\/load\.js$/.exec(script.src)[1] + "/mod"
   // Create a root module and require the main module
   // defined in the "data-module" attribute.
-  new Module("/index", base).require(script.getAttribute("data-module"))
+  var top = new Module("/index", base)
+
+  if (script.hasAttribute("data-require"))
+    window[script.getAttribute("data-require") || "require"] = top.require
+  top.require(script.getAttribute("data-module"))
 })()
