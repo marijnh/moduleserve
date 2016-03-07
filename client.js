@@ -20,9 +20,9 @@
     var rel = /^\.(\.?)\//, m
     while (m = rel.exec(name)) {
       if (m[1]) {
-        var slash = base.lastIndexOf("/", base.length - 2)
-        if (slash > 0 && base.slice(slash) != "../") base = base.slice(0, slash + 1)
-        else base = base + "../"
+        var end = /\/([^\/]+)\/$/.exec(base)
+        if (end && end[1] != "..") base = base.slice(0, base.length - end[0].length + 1)
+        else base += "../"
       }
       name = name.slice(m[0].length)
     }
