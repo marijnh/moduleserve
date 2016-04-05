@@ -7,7 +7,8 @@
     xhr.open("get", url, false)
     xhr.send()
     if (xhr.status >= 400) throw new Error(url + ": " + xhr.statusText)
-    return {url: xhr.responseURL, content: xhr.responseText}
+    return {url: xhr.responseURL || xhr.getResponseHeader("X-Request-URL"),
+            content: xhr.responseText}
   }
 
   // A key-value map of all loaded modules.

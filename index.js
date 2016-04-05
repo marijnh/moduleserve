@@ -46,7 +46,8 @@ require("http").createServer(function(req, resp) {
   if (!handle) return ecstatic(req, resp)
 
   var send = function(status, text, headers) {
-    var hds = {"access-control-allow-origin": "*"}
+    var hds = {"access-control-allow-origin": "*",
+               "x-request-url": req.url}
     if (!headers || typeof headers == "string")
       hds["content-type"] = headers || "text/plain"
     else
