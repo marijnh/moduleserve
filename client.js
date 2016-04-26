@@ -45,7 +45,7 @@
       // Modify the module path for the request,
       // changing up one directory ("..") to "__".
       var resp = get(base + name.replace(/(^|\/)\.\.(?=$|\/)/g, "$1__").replace(/\.js$/, ""))
-      var resolvedName = resp.url.match(/\/moduleserve\/mod(\/.*)/)[1].replace(/(^|\/)__(?=$|\/)/g, "$1..")
+      var resolvedName = resp.url.match(/.*?\/moduleserve\/mod(\/.*)/)[1].replace(/(^|\/)__(?=$|\/)/g, "$1..")
       if (resolvedName != name) resolved[name] = resolvedName
       name = resolvedName
       window.reqs =( window.reqs || 0) + 1
