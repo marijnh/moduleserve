@@ -48,7 +48,6 @@
       var resolvedName = resp.url.match(/.*?\/moduleserve\/mod(\/.*)/)[1].replace(/(^|\/)__(?=$|\/)/g, "$1..")
       if (resolvedName != name) resolved[name] = resolvedName
       name = resolvedName
-      window.reqs =( window.reqs || 0) + 1
       if (name in loaded) return loaded[name]
       if (/\.json$/.test(name))
         return loaded[name] = JSON.parse(resp.content)
