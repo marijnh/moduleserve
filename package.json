@@ -1,6 +1,6 @@
 {
   "name": "moduleserve",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Serve and transpile CommonJS modules over HTTP",
   "main": "index.js",
   "bin": {
