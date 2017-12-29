@@ -19,6 +19,6 @@
   "author": "Marijn Haverbeke <marijnh@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "ecstatic": "^1.4.0"
+    "ecstatic": "^3.0.0"
   }
 }
