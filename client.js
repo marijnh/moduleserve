@@ -1,6 +1,9 @@
 (function() {
   "use strict"
 
+  // Shim process, which many JS libraries nowadays include in their source for checking dev/prod builds
+  window.process = { env: { NODE_ENV: "dev" } };
+
   // Make a synchronous HTTP request for a module.
   function get(url) {
     var xhr = new XMLHttpRequest()
