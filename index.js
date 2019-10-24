@@ -35,4 +35,4 @@ require("http").createServer(function(req, resp) {
   moduleServer(req, resp) || ecstatic(req, resp)
 }).listen(port, host)
 
-console.log("Module server listening on " + host + ":" + port)
+console.log("Module server listening on http://" + host + ":" + port)
