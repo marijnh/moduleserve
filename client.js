@@ -39,6 +39,7 @@
     // Load a submodule of this module.
     this.require = function(name) {
       if (/^\./.test(name)) name = resolve(path, name)
+      else if (/^\//.test(name)) name = resolve("", name);
       else name = path + "/__mod/" + name
       if (name in resolved) name = resolved[name]
       if (name in loaded) return loaded[name]
