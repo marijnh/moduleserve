@@ -1,10 +1,11 @@
 var ModuleServer = require("./moduleserver")
 var path = require("path")
+var send = require("send")
 
-var host = "localhost", port = 8080, dir = ".", transform = null
+var host = "localhost", port = 8080, dir = ".", transform = null, spaMode = false
 
 function usage() {
-  console.log("Usage: moduleserve [--port port] [--host host] [--transform module] [dir]")
+  console.log("Usage: moduleserve [--port port] [--host host] [--transform module] [--spa] [dir]")
   process.exit(1)
 }
 
@@ -13,6 +14,7 @@ for (var i = 2; i < process.argv.length; i++) {
   if (arg == "--port" && next) { port = +next; i++ }
   else if (arg == "--host" && next) { host = next; i++ }
   else if (arg == "--transform" && next) { transform = next; i++ }
+  else if (arg == "--spa") { spaMode = true; i++ }
   else if (dir == "." && arg[0] != "-") dir = arg
   else usage()
 }
@@ -26,13 +28,23 @@ if (transform) {
   transform = transformMod.transform
 }
 
-var ecstatic = require("ecstatic")({root: root})
+var static = require("serve-static")(root)
 var moduleServer = new ModuleServer({root: root, transform: transform}).handleRequest
 
 // Create the server that listens to HTTP requests
 // and returns module contents.
 require("http").createServer(function(req, resp) {
-  moduleServer(req, resp) || ecstatic(req, resp)
+  if (moduleServer(req, resp)) return;
+    static(req, resp, function next(err) {
+      if (spaMode) {
+        var stream = send(req, path.join(root, "index.html"));
+        stream.pipe(resp);
+      } else {
+        var stream = send(req, '');
+        stream.res = resp
+        stream.error(404)
+      }
+    });
 }).listen(port, host)
 
 console.log("Module server listening on http://" + host + ":" + port)
