@@ -34,17 +34,15 @@ var moduleServer = new ModuleServer({root: root, transform: transform}).handleRe
 // Create the server that listens to HTTP requests
 // and returns module contents.
 require("http").createServer(function(req, resp) {
-  if (moduleServer(req, resp)) return;
-    static(req, resp, function next(err) {
-      if (spaMode) {
-        var stream = send(req, path.join(root, "index.html"));
-        stream.pipe(resp);
-      } else {
-        var stream = send(req, '');
-        stream.res = resp
-        stream.error(404)
-      }
-    });
+  if (moduleServer(req, resp)) return
+  static(req, resp, function next(err) {
+    if (spaMode) {
+      send(req, path.join(root, "index.html")).pipe(resp);
+    } else {
+      resp.statusCode = 404
+      resp.end('Not found')
+    }
+  })
 }).listen(port, host)
 
 console.log("Module server listening on http://" + host + ":" + port)
