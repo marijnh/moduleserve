@@ -60,6 +60,8 @@ have it installed locally there, or globally) that you're running the
 tool on, and uses it to transform any files whose path does not
 contain `node_modules/`.
 
+If you pass `--spa`, every file path where no file can be found automatically will fall back to serving the `index.html`. This option allows you to implement routing for Single Page Applications.
+
 The client is going to make a request for every single module file, so
 for a bigger project the initial load is bound to be slow, especially
 if you're using an expensive transform. The server then caches these
