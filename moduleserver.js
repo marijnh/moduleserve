@@ -53,7 +53,7 @@ ModuleServer.prototype.handleRequest = function(req, resp) {
       send(301, null, {location: "/moduleserve/mod/" + dash(found)})
       return true
     }
-  } else if (/\.js$/.test(path)) {
+  } else if (/\.js$/.test(path) && found.indexOf(/[^\/]+\.js$/.exec(path)[0] + "/") > -1) {
     send(301, null, {location: "/moduleserve/mod/" + dash(found.slice(0, found.length - 3))})
     return true
   }
