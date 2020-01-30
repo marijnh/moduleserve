@@ -42,7 +42,7 @@ ModuleServer.prototype.handleRequest = function(req, resp) {
   var path = undash(handle[1])
   var found = this.resolved[path]
   if (!found) {
-    found = this.resolveModule(path)
+    found = this.resolveModule(path) || this.resolveModule(path + ".js")
     if (!found) { send(404, "Not found"); return true }
     this.resolved[path] = found
   }
