@@ -16,7 +16,7 @@
     "http",
     "development"
   ],
-  "author": "Marijn Haverbeke <marijnh@gmail.com>",
+  "author": "Marijn Haverbeke <marijn@haverbeke.berlin>",
   "license": "MIT",
   "dependencies": {
     "send": "^0.17.1",
